@@ -14,9 +14,7 @@ function App() {
   return (
     <Router>
       <Switch>
-        <Route path="/:uuid">
-          <Game />
-        </Route>
+        <Route path="/:uuid" component={Game} />
         <Route path="*">
           <Redirect to={uuidv4()}/>
         </Route>

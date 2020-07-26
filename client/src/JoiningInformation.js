@@ -19,13 +19,14 @@ class JoiningInformation extends React.Component {
     }
 
     render() {
+        const location = window.location.href;
+
         return (
             <Card>
                 <Card.Body>
-                    <Card.Title>Card Title</Card.Title>
+                    <Card.Title>Joining Information</Card.Title>
                     <Card.Text>
-                    Some quick example text to build on the card title and make up the bulk of
-                    the card's content.
+                        Share this link to invite others to join: <a href={location}>{location}</a>
                     </Card.Text>
                 </Card.Body>
             </Card>

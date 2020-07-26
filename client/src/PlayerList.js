@@ -1,17 +1,22 @@
 import React from 'react';
 
+import ListGroup from 'react-bootstrap/ListGroup'
+
 class PlayerList extends React.Component {
     constructor(props = {}) {
         super(props);
+
         this.state = {
             error: null,
             isLoaded: false,
-            players: props.players ?? []
+            players: props.players || []
         };
     }
 
     componentDidMount() {
-        // Any async logic we want to have done.
+        if (!!this.state.players) {
+            this.setState({isLoaded: true});
+        }
     }
 
     render () {
@@ -24,9 +29,10 @@ class PlayerList extends React.Component {
         }
 
         return (
-            <ul>
-                {players.map(player => (<li class={player.class??""} >{player.name}</li>))}
-            </ul>
+            <ListGroup>
+                
+                {players.map(player => (<ListGroup.Item key={player.name} >{player.name}</ListGroup.Item>))}
+            </ListGroup>
         );
     }
 }
