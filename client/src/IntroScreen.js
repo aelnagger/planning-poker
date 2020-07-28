@@ -30,7 +30,7 @@ class IntroScreen extends React.Component {
             stage: "intro",
             gameId: this.state.uuid,
             player: this.state.name,
-            selection: null
+            selection: -1
         };
 
         this.props.webSocket.send(JSON.stringify(datum));

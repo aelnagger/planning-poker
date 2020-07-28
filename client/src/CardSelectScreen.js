@@ -1,32 +1,23 @@
 import React from 'react';
-import Card from 'react-bootstrap/Card'
-import CardDeck from 'react-bootstrap/CardDeck'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Button from 'react-bootstrap/Button'
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
 
-
-
 class CardSelectScreen extends React.Component {
 
-    constructor(props = {}) {
-        super(props);
+    handleClickFactory(value) {
+        return (event) => {
+            const datum = {
+                stage: "select",
+                gameId: this.props.uuid,
+                player: this.props.player,
+                selection: value
+            };
 
-        this.state = {
-            error: null,
-            isLoaded: false,
-            players: []
-        }
-    }
-
-    componentDidMount() {
-        // Do stuff.
-    }
-
-    handleClick(event) {
-        console.log(event);
+            this.props.webSocket.send(JSON.stringify(datum));
+        };
     }
 
     render() {
@@ -51,7 +42,7 @@ class CardSelectScreen extends React.Component {
                 <ButtonToolbar>
                     {cards.map(card => (
                         <ButtonGroup size="lg" className="mr-2" key={card.value}>
-                            <Button size="lg" key={card.value} onClick={this.handleClick}>{card.display}</Button>
+                            <Button size="lg" key={card.value} onClick={this.handleClickFactory(card.value)}>{card.display}</Button>
                         </ButtonGroup>
                     ))}
                 </ButtonToolbar>

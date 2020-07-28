@@ -67,8 +67,8 @@ function getPlayers(gameId, cb) {
   })
 }
 
-function addPlayer(gameId, name, cb) {
-  redisClient.HSET(gameId, name, -1, (err, arr) => {
+function setPlayer(gameId, name, selection, cb) {
+  redisClient.HSET(gameId, name, selection, (err, arr) => {
     if (err) {
       console.error(err);
     } else {
@@ -110,9 +110,10 @@ wsServer.on('connection', (socketClient, request) => {
           });
           break;
         case "intro":
-          addPlayer(gameId, player, (players) => {
+          setPlayer(gameId, player, selection, (players) => {
             const gameState = {
               players: players,
+              player: player,
               screen: "lobby"
             };
 
@@ -139,6 +140,22 @@ wsServer.on('connection', (socketClient, request) => {
             });
           }
           break
+        case "select":
+          setPlayer(gameId, player, selection, (players) => {
+            const gameState = {
+              players: players,
+            };
+
+            const payload = JSON.stringify(gameState);
+            socketClient.send(payload);
+
+            // Announce the new player to the game.
+            const socketSet = gameClientMap.get(gameUrl);
+            socketSet.forEach(client => {
+              client.send(payload);
+            });
+          });
+          break;
       }
     } catch (e) {
       // We may want to close the socket as well.
