@@ -9,8 +9,8 @@ import {
 } from "react-router-dom";
 import Game from './Game';
 
-
 function App() {
+  
   return (
     <Router>
       <Switch>

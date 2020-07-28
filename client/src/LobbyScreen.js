@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from 'react-bootstrap/Button'
 
 class LobbyScreen extends React.Component {
 
@@ -10,17 +11,32 @@ class LobbyScreen extends React.Component {
             isLoaded: false,
             players: []
         }
+
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    componentDidMount() {
-        // Do stuff.
+    handleSubmit() {
+        const datum = {
+            stage: "lobby",
+            gameId: this.state.uuid,
+            player: this.state.name,
+            selection: "start-round",
+        };
+
+        this.props.webSocket.send(JSON.stringify(datum));
     }
 
     render() {
         return (
             <div>
-                <button class="call-to-action">Start Round</button>
-            </div>
+            <Button
+            variant="primary"
+            type="submit"
+            onClick={this.handleSubmit}
+        >
+            Start Round
+        </Button>
+        </div>
         );
     }
 }

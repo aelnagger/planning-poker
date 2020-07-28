@@ -25,15 +25,11 @@ class Game extends React.Component {
             screen: "intro",
             isLoaded: false,
             uuid: uuid,
-            players: [
-                {name: "Adam", selected: 2},
-                {name: "Alicia", selected: null},
-            ],
+            webSocket: null,
         }
     }
 
     handleGameResponse(data) {
-        console.log(data);
         this.setState({
             players: data
         });
@@ -41,13 +37,46 @@ class Game extends React.Component {
 
     componentDidMount() {
         const uuid = this.state.uuid;
-        fetch(`/api/${uuid}`)
-            .then(r => r.json())
-            .then(r => this.handleGameResponse(r));
+
+        console.log("Opening websocket to server.");
+        const webSocket = new WebSocket(`ws://${window.location.hostname}:5005/${uuid}`);
+
+        webSocket.onmessage = (event) => {
+            console.log("Got a websocket event!");
+            console.log(event);
+
+            if (event.data) {
+                const datum = JSON.parse(event.data);
+                console.log(datum);
+                this.setState(datum);
+            }
+        };
+        webSocket.onclose = (event) => {
+            console.log("WebSocket was closed.");
+            console.log(event);
+        };
+        webSocket.onopen = (event) => {
+            console.log("Websocket has been opened.");
+            console.log(event);
+
+            // Initial player query.
+            const datum = {
+                stage: "query",
+                gameId: uuid,
+            };
+            const payload = JSON.stringify(datum);
+            webSocket.send(payload);
+        };
+        webSocket.onerror = (event) => {
+            console.error('Websocket error occurred');
+            console.error(event);
+        };
+
+        this.setState({webSocket: webSocket});
     }
 
     renderCurrentGameScreen() {
-        const {screen} = this.props;
+        const {screen} = this.state;
         switch (screen) {
             case "lobby":
                 return <LobbyScreen {...this.state} />
@@ -68,8 +97,6 @@ class Game extends React.Component {
          * 2. The list of players.
          * 3. Joining information.
         */
-        const {screen, players, gameKey} = this.state;
-
         return (
             <Jumbotron fluid>
                 <Container>
