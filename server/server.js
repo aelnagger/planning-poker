@@ -62,7 +62,7 @@ function getPlayers(gameId, cb) {
     console.log(typeof(val));
     console.log(val);
 
-    const retval =  Object.keys(val).map(key => {return {name: key, selection: val[key]}});
+    const retval =  Object.keys(val || {}).map(key => {return {name: key, selection: Number(val[key])}});
     cb(retval);
   })
 }
@@ -73,6 +73,23 @@ function setPlayer(gameId, name, selection, cb) {
       console.error(err);
     } else {
       getPlayers(gameId, cb);
+    }
+  });
+}
+
+function reset(gameId, cb) {
+  redisClient.HKEYS(gameId, (err, keys) => {
+    if (err) {
+      console.error(err);
+    } else {
+      const newMap = keys.flatMap((key) => [key, "-1"]);
+      redisClient.HSET(gameId, ...newMap, (err) => {
+        if (err) {
+          console.error(err);
+        } else {
+          getPlayers(gameId, cb);
+        }
+      });
     }
   });
 }
@@ -111,20 +128,23 @@ wsServer.on('connection', (socketClient, request) => {
           break;
         case "intro":
           setPlayer(gameId, player, selection, (players) => {
+
             const gameState = {
               players: players,
-              player: player,
-              screen: "lobby"
+              screen: "lobby",
             };
 
-            const payload = JSON.stringify(gameState);
-            socketClient.send(payload);
-
             // Announce the new player to the game.
-            const socketSet = gameClientMap.get(gameUrl);
-            socketSet.forEach(client => {
+            let payload = JSON.stringify(gameState);
+            gameClientMap.get(gameUrl).forEach(client => {
               client.send(payload);
             });
+
+            // Set player state for the submitting player.
+            gameState.player = player;
+            payload = JSON.stringify(gameState);
+            socketClient.send(payload);
+
           });
           break;
         case "lobby":
@@ -146,16 +166,39 @@ wsServer.on('connection', (socketClient, request) => {
               players: players,
             };
 
-            const payload = JSON.stringify(gameState);
+            let payload = JSON.stringify(gameState);
             socketClient.send(payload);
 
-            // Announce the new player to the game.
+            // Figure out if we should advance to the results screen.
+            console.log("Evaluating if all players have made selections.");
+            console.log(players);
+            if (!players.some((player) => player.selection == -1)) {
+              console.log("All players have made a selection!");
+              gameState.screen = "result";
+              payload = JSON.stringify(gameState);
+            }
+
+            // Announce the player selections.
             const socketSet = gameClientMap.get(gameUrl);
             socketSet.forEach(client => {
               client.send(payload);
             });
           });
           break;
+          case "results":
+            // The only action we expect to handle from the results screen is starting a new hand.
+            reset(gameId, (players) => {
+              const gameState = {
+                players: players,
+                screen: "select",
+              };
+              const socketSet = gameClientMap.get(gameUrl);
+              const payload = JSON.stringify(gameState);
+              socketSet.forEach(client => {
+                client.send(payload);
+              });
+            });
+            break
       }
     } catch (e) {
       // We may want to close the socket as well.

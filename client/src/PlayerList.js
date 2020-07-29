@@ -8,7 +8,7 @@ class PlayerList extends React.Component {
             return "";
         }
 
-        if (selection == -1) {
+        if (selection === -1) {
             return "warning"
         }
 
@@ -18,6 +18,10 @@ class PlayerList extends React.Component {
     render () {
         if (!this.props.players) {
             return <div>Loading...</div>
+        }
+
+        if (this.props.players.length === 0) {
+            return <div>No players have joined yet...</div>
         }
 
         return (
