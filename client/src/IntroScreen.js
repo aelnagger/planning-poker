@@ -13,6 +13,7 @@ class IntroScreen extends React.Component {
             name: '',
             players: [],
             uuid: props.uuid,
+            canSubmit: false,
         }
 
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -39,8 +40,10 @@ class IntroScreen extends React.Component {
     }
 
     handleNameChange(event) {
+        const name = event.target.value;
         this.setState({
-            name: event.target.value
+            name: name,
+            canSubmit: (name && 0 !== name.length),
         });
     }
 
@@ -55,6 +58,7 @@ class IntroScreen extends React.Component {
                     variant="primary"
                     type="submit"
                     onClick={this.handleSubmit}
+                    disabled={!this.state.canSubmit}
                 >
                     Join
                 </Button>
