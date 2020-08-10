@@ -18,38 +18,6 @@ const redisClient = redis.createClient({
   host      : 'redis',        // replace with your hostanme or IP address
 });
 
-app.get('/api/:uuid', (req, res) => {
-  const {uuid} = req.params;
-  console.log(`GET: ${uuid}`);
-  redisClient.HGETALL(uuid, (err, arr) => {
-    if (err) {
-      console.error(err);
-    }
-
-    console.log(arr);
-    res.json(arr || []);
-  });
-});
-
-app.post('/api/:uuid/:name/:value', (req, res) => {
-  const {uuid, name, value} = req.params;
-  console.log(`POST: ${uuid} - ${name} - ${value}`);
-  redisClient.HSET(uuid, name, value, (err, arr) => {
-    if (err) {
-      console.error(err);
-    } else {
-      redisClient.HGETALL(uuid, (err, arr) => {
-        if (err) {
-          console.error(err);
-        }
-    
-        console.log(arr);
-        res.json(arr || []);
-      });
-    }
-  });
-});
-
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
 const wsServer = new WebSocket.Server({port: wsPort});
