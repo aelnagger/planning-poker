@@ -18,38 +18,6 @@ const redisClient = redis.createClient({
   host      : 'redis',        // replace with your hostanme or IP address
 });
 
-app.get('/api/:uuid', (req, res) => {
-  const {uuid} = req.params;
-  console.log(`GET: ${uuid}`);
-  redisClient.HGETALL(uuid, (err, arr) => {
-    if (err) {
-      console.error(err);
-    }
-
-    console.log(arr);
-    res.json(arr || []);
-  });
-});
-
-app.post('/api/:uuid/:name/:value', (req, res) => {
-  const {uuid, name, value} = req.params;
-  console.log(`POST: ${uuid} - ${name} - ${value}`);
-  redisClient.HSET(uuid, name, value, (err, arr) => {
-    if (err) {
-      console.error(err);
-    } else {
-      redisClient.HGETALL(uuid, (err, arr) => {
-        if (err) {
-          console.error(err);
-        }
-    
-        console.log(arr);
-        res.json(arr || []);
-      });
-    }
-  });
-});
-
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
 const wsServer = new WebSocket.Server({port: wsPort});
@@ -69,6 +37,16 @@ function getPlayers(gameId, cb) {
 
 function setPlayer(gameId, name, selection, cb) {
   redisClient.HSET(gameId, name, selection, (err, arr) => {
+    if (err) {
+      console.error(err);
+    } else {
+      getPlayers(gameId, cb);
+    }
+  });
+}
+
+function removePlayer(gameId, name, cb) {
+  redisClient.HDEL(gameId, name, (err, arr) => {
     if (err) {
       console.error(err);
     } else {
@@ -127,6 +105,20 @@ wsServer.on('connection', (socketClient, request) => {
           });
           break;
         case "intro":
+          // Stash away a close handler so that we can remove the player when they disconnect.
+          socketClient.on('close', (socket, code, reason) => {
+            gameClientMap.get(gameUrl).delete(socketClient);
+            removePlayer(gameId, player, (players) => {
+              const gameState = {
+                players: players
+              };
+              let payload = JSON.stringify(gameState);
+              gameClientMap.get(gameUrl).forEach(client => {
+                client.send(payload);
+              });
+            });
+          });
+
           setPlayer(gameId, player, selection, (players) => {
 
             const gameState = {
