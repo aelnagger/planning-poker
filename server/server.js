@@ -45,6 +45,16 @@ function setPlayer(gameId, name, selection, cb) {
   });
 }
 
+function removePlayer(gameId, name, cb) {
+  redisClient.HDEL(gameId, name, (err, arr) => {
+    if (err) {
+      console.error(err);
+    } else {
+      getPlayers(gameId, cb);
+    }
+  });
+}
+
 function reset(gameId, cb) {
   redisClient.HKEYS(gameId, (err, keys) => {
     if (err) {
@@ -95,6 +105,20 @@ wsServer.on('connection', (socketClient, request) => {
           });
           break;
         case "intro":
+          // Stash away a close handler so that we can remove the player when they disconnect.
+          socketClient.on('close', (socket, code, reason) => {
+            gameClientMap.get(gameUrl).delete(socketClient);
+            removePlayer(gameId, player, (players) => {
+              const gameState = {
+                players: players
+              };
+              let payload = JSON.stringify(gameState);
+              gameClientMap.get(gameUrl).forEach(client => {
+                client.send(payload);
+              });
+            });
+          });
+
           setPlayer(gameId, player, selection, (players) => {
 
             const gameState = {
