@@ -48,6 +48,13 @@ class Game extends React.Component {
             if (event.data) {
                 const datum = JSON.parse(event.data);
                 console.log(datum);
+
+                // Don't update the screen if we're on the intro screen and haven't picked a name yet.
+                if (this.state.screen == "intro" && !datum.player && datum.screen) {
+                    console.log("Skipping screen update.");
+                    delete datum.screen;
+                }
+
                 this.setState(datum);
             }
         };
