@@ -123,7 +123,6 @@ wsServer.on('connection', (socketClient, request) => {
 
             const gameState = {
               players: players,
-              screen: "lobby",
             };
 
             // Announce the new player to the game.
@@ -134,6 +133,8 @@ wsServer.on('connection', (socketClient, request) => {
 
             // Set player state for the submitting player.
             gameState.player = player;
+            gameState.screen = "lobby";
+
             payload = JSON.stringify(gameState);
             socketClient.send(payload);
 
